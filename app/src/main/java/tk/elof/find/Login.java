@@ -42,9 +42,9 @@ public class Login extends AppCompatActivity {
         password = (EditText) findViewById(R.id.password);
         mail = (EditText) findViewById(R.id.mail);
         number = (EditText) findViewById(R.id.number);
-        failureText = (TextView) findViewById(R.id.failureText);
         login = (Button) findViewById(R.id.loginButton);
         create = (Button) findViewById(R.id.create);
+        failureText = (TextView) findViewById(R.id.failureText);
         createTask = (Button) findViewById(R.id.createTask);
     }
 
@@ -88,6 +88,8 @@ public class Login extends AppCompatActivity {
                         + "&edit=" + user.edit
                         + "&add=" + user.add;
 
+                Log.w("APP", link);
+
 
                 URL url = new URL(link);
                 URLConnection conn = url.openConnection();
@@ -105,7 +107,8 @@ public class Login extends AppCompatActivity {
 
                 return sb.toString();
             } catch (Exception e) {
-                return e.toString();
+                Log.w("APP", e.toString());
+                return "Failure";
             }
         }
 
