@@ -1,30 +1,81 @@
 package tk.elof.find;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     ListView listView;
     User user = new User();
+    public class CustomAdapter extends BaseAdapter {
+
+        Contact[] contacts;
+        Activity context;
+
+        public CustomAdapter(Activity context, Contact[] contacts) {
+            this.contacts = contacts;
+            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return 0;
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return i;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int i, View convertView, ViewGroup viewGroup) {
+            View view = convertView;
+            Contact contact = contacts[i];
+
+            if(view == null) {
+                LayoutInflater vi;
+                vi = LayoutInflater.from(context);
+                view = vi.inflate(R.layout.contact_list_item, null);
+
+                TextView name = (TextView) view.findViewById(R.id.Name);
+                TextView pos = (TextView) view.findViewById(R.id.Position);
+
+                name.setText(contact.getName());
+                pos.setText(contact.getPosition());
+            }
+
+            return view;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +83,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listView = (ListView) findViewById(R.id.list);
+        Intent intent = getIntent();
+        user.token = intent.getStringExtra("token");
 
-        user.intent = "search";
-        user.query = "admin";
-        DownloadPageTask task = new DownloadPageTask();
+        user.intent = "view";
+        user.query = "25";
+        DownloadListTask task = new DownloadListTask();
         task.execute();
     }
 
@@ -61,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class DownloadPageTask extends AsyncTask<String, Void, String> {
+    public class DownloadListTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... urls) {
             Log.w("APP", "background-task");
@@ -116,35 +169,8 @@ public class MainActivity extends AppCompatActivity {
         if (Objects.equals(user.result, "Failure")) {
             Log.w("RESULT", "Failure");
         } else {
-            String[] values = new String[] {"1", "2", "3", user.result};
 
-            final ArrayList<String> list = new ArrayList<String>();
 
-            for(int i = 0; i < values.length; i++) {
-                list.add(values[i]);
-            }
-
-            final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-            listView.setAdapter(adapter);
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, final View view,
-                                        int position, long id) {
-                    final String item = (String) parent.getItemAtPosition(position);
-                    view.animate().setDuration(2000).alpha(0)
-                            .withEndAction(new Runnable() {
-                                @Override
-                                public void run() {
-                                    list.remove(item);
-                                    adapter.notifyDataSetChanged();
-                                    view.setAlpha(1);
-                                }
-                            });
-                }
-
-            });
         }
     }
 }

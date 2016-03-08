@@ -141,6 +141,7 @@ public class Login extends AppCompatActivity {
             if (user.intent == "login") {
                 user.token = user.result;
                 Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("token", user.token);
                 startActivity(intent);
 
 
