@@ -2,6 +2,7 @@ package tk.elof.find;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -31,46 +32,37 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
     ListView listView;
     User user = new User();
-    public class CustomAdapter extends BaseAdapter {
+    Activity activity = this;
 
-        Contact[] contacts;
-        Activity context;
+    public class CustomAdapter extends ArrayAdapter<Contact> {
 
-        public CustomAdapter(Activity context, Contact[] contacts) {
-            this.contacts = contacts;
-            this.context = context;
+        public CustomAdapter(Context context, int textViewResourceId) {
+            super(context, textViewResourceId);
         }
 
-        @Override
-        public int getCount() {
-            return 0;
+        public CustomAdapter(Context context, int resource, Contact[] contacts) {
+            super(context, resource, contacts);
         }
 
-        @Override
-        public Object getItem(int i) {
-            return i;
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
 
         @Override
         public View getView(int i, View convertView, ViewGroup viewGroup) {
             View view = convertView;
-            Contact contact = contacts[i];
 
             if(view == null) {
                 LayoutInflater vi;
-                vi = LayoutInflater.from(context);
+                vi = LayoutInflater.from(getContext());
                 view = vi.inflate(R.layout.contact_list_item, null);
+            }
 
+            Contact c = getItem(i);
+
+            if(c != null) {
                 TextView name = (TextView) view.findViewById(R.id.Name);
-                TextView pos = (TextView) view.findViewById(R.id.Position);
+                TextView position = (TextView) view.findViewById(R.id.Position);
 
-                name.setText(contact.getName());
-                pos.setText(contact.getPosition());
+                name.setText(c.getName());
+                position.setText(c.getPosition());
             }
 
             return view;
@@ -86,8 +78,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         user.token = intent.getStringExtra("token");
 
-        user.intent = "view";
-        user.query = "25";
+        user.intent = "list";
+
         DownloadListTask task = new DownloadListTask();
         task.execute();
     }
@@ -168,8 +160,19 @@ public class MainActivity extends AppCompatActivity {
     public void taskResult() {
         if (Objects.equals(user.result, "Failure")) {
             Log.w("RESULT", "Failure");
+            return;
         } else {
+            String[] contactIDs = user.result.split("_");
 
+            Contact[] contacts = new Contact[contactIDs.length];
+
+            for(int i = 0; i < contactIDs.length; i++) {
+                contacts[i] = new Contact(contactIDs[i], user);
+            }
+
+            CustomAdapter adapter = new CustomAdapter(this, R.layout.contact_list_item, contacts);
+
+            listView.setAdapter(adapter);
 
         }
     }

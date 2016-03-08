@@ -5,12 +5,13 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.IDN;
 import java.net.URL;
 import java.net.URLConnection;
 
 public class Contact {
-    public Contact(String id, User userin) {
-        final User user = userin;
+    public Contact(String ID, User userIn) {
+        final User user = userIn;
          class DownloadContactTask extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... urls) {
@@ -60,14 +61,18 @@ public class Contact {
             }
         }
 
+        user.intent = "view";
+        user.query = ID;
         DownloadContactTask task = new DownloadContactTask();
         task.execute();
-
 
     }
 
     private void apply(String result) {
-
+        String[] parts = result.split("_");
+        this.name = parts[0];
+        this.time = parts[1];
+        this.position = parts[2];
     }
 
     public String getID() {
