@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -31,43 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     ListView listView;
-    User user = new User();
-    Activity activity = this;
-
-    public class CustomAdapter extends ArrayAdapter<Contact> {
-
-        public CustomAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-        }
-
-        public CustomAdapter(Context context, int resource, Contact[] contacts) {
-            super(context, resource, contacts);
-        }
-
-
-        @Override
-        public View getView(int i, View convertView, ViewGroup viewGroup) {
-            View view = convertView;
-
-            if(view == null) {
-                LayoutInflater vi;
-                vi = LayoutInflater.from(getContext());
-                view = vi.inflate(R.layout.contact_list_item, null);
-            }
-
-            Contact c = getItem(i);
-
-            if(c != null) {
-                TextView name = (TextView) view.findViewById(R.id.Name);
-                TextView position = (TextView) view.findViewById(R.id.Position);
-
-                name.setText(c.getName());
-                position.setText(c.getPosition());
-            }
-
-            return view;
-        }
-    }
+    TextView textView;
+    final User user = new User();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,10 +41,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listView = (ListView) findViewById(R.id.list);
+        textView = (TextView) findViewById(R.id.noContacts);
         Intent intent = getIntent();
         user.token = intent.getStringExtra("token");
-
-        user.intent = "list";
 
         DownloadListTask task = new DownloadListTask();
         task.execute();
@@ -112,17 +77,8 @@ public class MainActivity extends AppCompatActivity {
             Log.w("APP", "background-task");
             try {
                 String link = "http://apktest.site90.com/"
-                        + "?intent=" + user.intent
-                        + "&token=" + user.token
-                        + "&user=" + user.user
-                        + "&pass=" + user.pass
-                        + "&mail=" + user.mail
-                        + "&number=" + user.number
-                        + "&query=" + user.query
-                        + "&pos=" + user.pos
-                        + "&id=" + user.id
-                        + "&edit=" + user.edit
-                        + "&add=" + user.add;
+                        + "?intent=" + "list"
+                        + "&token=" + user.token;
 
                 Log.w("APP", link);
 
@@ -158,22 +114,30 @@ public class MainActivity extends AppCompatActivity {
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public void taskResult() {
-        if (Objects.equals(user.result, "Failure")) {
-            Log.w("RESULT", "Failure");
+        if (Objects.equals(user.result, "Failure") || user.result.length() < 1) {
+            Log.w("RESULT", user.result);
+            textView.setVisibility(View.VISIBLE);
             return;
         } else {
             String[] contactIDs = user.result.split("_");
 
-            Contact[] contacts = new Contact[contactIDs.length];
+            final Contact[] contacts = new Contact[contactIDs.length];
 
             for(int i = 0; i < contactIDs.length; i++) {
-                contacts[i] = new Contact(contactIDs[i], user);
+                if(contactIDs[i].length() > 0) {
+                    contacts[i] = new Contact(contactIDs[i], user);
+                }
             }
 
-            CustomAdapter adapter = new CustomAdapter(this, R.layout.contact_list_item, contacts);
+            try {
+                Thread.sleep(800 * contactIDs.length);
+            } catch (Exception e) {
+                Log.w("APP", e.toString());
+            }
+
+            final ContactAdapter adapter = new ContactAdapter(this, R.layout.contact_list_item, contacts, user);
 
             listView.setAdapter(adapter);
-
         }
     }
 }
