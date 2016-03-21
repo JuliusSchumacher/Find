@@ -1,6 +1,7 @@
 package tk.elof.find;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -15,6 +16,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -46,6 +50,67 @@ public class Login extends AppCompatActivity {
         create = (Button) findViewById(R.id.create);
         failureText = (TextView) findViewById(R.id.failureText);
         createTask = (Button) findViewById(R.id.createTask);
+
+        try {
+            FileInputStream fIn = openFileInput("token");
+            int c;
+            String temp = "";
+            while ((c = fIn.read()) != -1 ) {
+                temp = temp + Character.toString((char)c);
+            }
+            fIn.close();
+
+            final String token = temp;
+
+            class DownloadPageTask extends AsyncTask<String, Void, String> {
+                @Override
+                protected String doInBackground(String... urls) {
+                    Log.w("APP", "background-task");
+                    try {
+                        String link = "http://apktest.site90.com/"
+                                + "?intent=" + "list"
+                                + "&token=" + token;
+
+                        Log.w("APP", link);
+
+
+                        URL url = new URL(link);
+                        URLConnection conn = url.openConnection();
+
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+
+                        while ((line = reader.readLine()) != null) {
+                            sb.append(line);
+                            break;
+                        }
+                        Log.w("DOWN", sb.toString());
+
+                        return sb.toString();
+                    } catch (Exception e) {
+                        Log.w("APP", e.toString());
+                        return "Failure";
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(String result) {
+                    if (!result.equals("Failure")) {
+
+                        loginResult(token);
+                    }
+                    return;
+                }
+            }
+
+            DownloadPageTask task = new DownloadPageTask();
+            task.execute();
+
+        } catch (Exception e) {
+            Log.w("App", e.toString());
+        }
     }
 
     @Override
@@ -69,6 +134,14 @@ public class Login extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    void loginResult(String string){
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("token", string);
+        startActivity(intent);
+        return;
+    }
+
 
     public class DownloadPageTask extends AsyncTask<String, Void, String> {
         @Override
@@ -140,6 +213,18 @@ public class Login extends AppCompatActivity {
         } else {
             if (user.intent == "login") {
                 user.token = user.result;
+
+                File file = new File("token");
+
+                try {
+                    FileOutputStream fOut = openFileOutput("token", Context.MODE_PRIVATE);
+                    fOut.write(user.token.getBytes());
+                    fOut.close();
+                } catch (Exception e) {
+                    Log.w("APP", e.toString());
+                }
+
+
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.putExtra("token", user.token);
                 startActivity(intent);

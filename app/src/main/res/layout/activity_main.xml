@@ -5,10 +5,18 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="tk.elof.find.MainActivity">
+
+        <fragment
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:id="@+id/map"
+            class="com.google.android.gms.maps.SupportMapFragment"/>
+
         <ListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/list">
+            android:id="@+id/list"
+            android:layout_below="@+id/map">
 
         </ListView>
 
