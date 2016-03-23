@@ -18,10 +18,6 @@ import java.net.URLConnection;
 
 class ContactAdapter extends ArrayAdapter<Contact> {
 
-    public ContactAdapter(Context context, int textViewResourceId) {
-        super(context, textViewResourceId);
-    }
-
     public ContactAdapter(Context context, int resource, Contact[] contacts, User user) {
         super(context, resource, contacts);
         this.user = user;
@@ -53,10 +49,13 @@ class ContactAdapter extends ArrayAdapter<Contact> {
 
                 @Override
                 public void onClick(View v) {
+                    //c.refresh();
                     Intent intent = new Intent(getContext(), ContactPositionActivity.class);
                     intent.putExtra("name", c.getName());
                     intent.putExtra("position", c.getPosition());
                     intent.putExtra("time", c.getTime());
+                    intent.putExtra("id", c.getID());
+                    intent.putExtra("token", user.token);
                     if (c.getPosition() != null) {
                         getContext().startActivity(intent);
                     }

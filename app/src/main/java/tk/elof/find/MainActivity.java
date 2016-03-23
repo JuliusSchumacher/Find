@@ -66,6 +66,10 @@ public class MainActivity extends AppCompatActivity{
         searchResultText = (TextView) findViewById(R.id.search_result_name);
 
 
+        Intent serviceIntent = new Intent(this, LocationUpdateService.class);
+        stopService(serviceIntent);
+        startService(serviceIntent);
+
         Intent intent = getIntent();
         user.token = intent.getStringExtra("token");
 
@@ -87,7 +91,6 @@ public class MainActivity extends AppCompatActivity{
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         switch (id) {
             case R.id.action_settings:
                 return true;
@@ -100,6 +103,9 @@ public class MainActivity extends AppCompatActivity{
                 } catch (Exception e) {
                     Log.w("APP", e.toString());
                 }
+
+                Intent serviceIntent = new Intent(this, LocationUpdateService.class);
+                stopService(serviceIntent);
 
                 Intent intent = new Intent(this, Login.class);
                 startActivity(intent);
@@ -173,13 +179,19 @@ public class MainActivity extends AppCompatActivity{
                 }
             }
 
-            try {
-                Thread.sleep(1000 * contactIDs.length);
-            } catch (Exception e) {
-                Log.w("APP", e.toString());
-            }
-
             final ContactAdapter adapter = new ContactAdapter(this, R.layout.contact_list_item, contacts, user);
+
+
+            for(int i = 0; i < contacts.length; i++) {
+                long lastTime = System.currentTimeMillis();
+                long interval = 1000;
+                while (true) {
+                    long thisTime = System.currentTimeMillis();
+                    if((thisTime - lastTime) >= interval) {
+                        break;
+                    }
+                }
+            }
 
             listView.setAdapter(adapter);
         }

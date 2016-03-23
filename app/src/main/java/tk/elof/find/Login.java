@@ -224,7 +224,6 @@ public class Login extends AppCompatActivity {
                     Log.w("APP", e.toString());
                 }
 
-
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.putExtra("token", user.token);
                 startActivity(intent);

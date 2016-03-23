@@ -17,6 +17,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class ContactPositionActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    Marker contactMarker;
+    Contact markerContact;
+    User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +29,11 @@ public class ContactPositionActivity extends FragmentActivity implements OnMapRe
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        Intent intent = getIntent();
+        user = new User();
+        user.token = intent.getStringExtra("token");
+        markerContact = new Contact(intent.getStringExtra("id"), user);
     }
 
 
@@ -52,13 +60,50 @@ public class ContactPositionActivity extends FragmentActivity implements OnMapRe
         time = currentTime - time;
 
         LatLng contact = new LatLng(lat, lon);
-        Marker contactMarker = mMap.addMarker(new MarkerOptions()
+        contactMarker = mMap.addMarker(new MarkerOptions()
                 .position(contact)
                 .title(intent.getStringExtra("name"))
                 .snippet(time + " seconds ago"));
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(17));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(contact));
 
         contactMarker.showInfoWindow();
+
+        updateMarker();
+    }
+
+    public void updateMarker() {
+
+        markerContact.refresh();
+
+        long lastTime = System.currentTimeMillis();
+        long interval = 2000;
+        while (true) {
+            long thisTime = System.currentTimeMillis();
+            if((thisTime - lastTime) >= interval) {
+                break;
+            }
+        }
+
+        String name = markerContact.getName();
+        String position = markerContact.getPosition();
+        String time = markerContact.getTime();
+
+        Log.w("APP", "name: " + name + " position: " + position + " time: " + time);
+
+
+        if (position != null) {
+            String[] posArray = position.split("/");
+            LatLng contact = new LatLng(Long.parseLong(posArray[0]), Long.parseLong(posArray[1]));
+
+            long currentTime = System.currentTimeMillis();
+            long timeAgo = Long.parseLong(time) - currentTime;
+
+            contactMarker.setTitle(name);
+            contactMarker.setSnippet(timeAgo + " seconds ago");
+            contactMarker.setPosition(contact);
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(contact));
+        }
     }
 }

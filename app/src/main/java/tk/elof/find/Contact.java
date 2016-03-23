@@ -11,95 +11,17 @@ import java.net.URLConnection;
 import java.util.concurrent.TimeUnit;
 
 public class Contact {
+    final User user;
+
     public Contact(String ID, User userIn) {
         Log.w("CONTACT", ID);
-        final String id = ID;
-        final User user = userIn;
-         class DownloadContactTask extends AsyncTask<String, Void, String> {
-            @Override
-            protected String doInBackground(String... urls) {
-                Log.w("BACK", "background-task " + id);
-                try {
-                    String link = "http://apktest.site90.com/"
-                            + "?intent=" + "view"
-                            + "&token=" + user.token
-                            + "&query=" + id;
 
-                    Log.w("BACK", link);
-
-
-                    URL url = new URL(link);
-                    URLConnection conn = url.openConnection();
-
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                        break;
-                    }
-                    Log.w("BACK", sb.toString());
-
-                    return sb.toString();
-                } catch (Exception e) {
-                    Log.w("BACK", e.toString());
-                    return "Failure";
-                }
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                apply(result);
-                return;
-            }
-        }
-
+        id = ID;
+        user = userIn;
         this.id = ID;
+
         DownloadContactTask task = new DownloadContactTask();
         task.execute();
-
-        class DownloadViewTask extends AsyncTask<String, Void, String> {
-            @Override
-            protected String doInBackground(String... urls) {
-                Log.w("BACK", "background-task " + id);
-                try {
-                    String link = "http://apktest.site90.com/"
-                            + "?intent=" + "views"
-                            + "&token=" + user.token
-                            + "&query=" + id;
-
-                    Log.w("BACK", link);
-
-
-                    URL url = new URL(link);
-                    URLConnection conn = url.openConnection();
-
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                        break;
-                    }
-                    Log.w("BACK", sb.toString());
-
-                    return sb.toString();
-                } catch (Exception e) {
-                    Log.w("BACK", e.toString());
-                    return "Failure";
-                }
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                applyViews(result);
-                return;
-            }
-        }
 
         DownloadViewTask viewTask = new DownloadViewTask();
         viewTask.execute();
@@ -123,6 +45,98 @@ public class Contact {
     public void setViews(boolean views) {
         this.views = views;
     }
+
+    public void refresh() {
+        DownloadContactTask task = new DownloadContactTask();
+        task.execute();
+
+        DownloadViewTask viewTask = new DownloadViewTask();
+        viewTask.execute();
+    }
+
+    public class DownloadContactTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            Log.w("BACK", "background-task " + id);
+            try {
+                String link = "http://apktest.site90.com/"
+                        + "?intent=" + "view"
+                        + "&token=" + user.token
+                        + "&query=" + id;
+
+                Log.w("BACK", link);
+
+
+                URL url = new URL(link);
+                URLConnection conn = url.openConnection();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                    break;
+                }
+                Log.w("BACK", sb.toString());
+
+                return sb.toString();
+            } catch (Exception e) {
+                Log.w("BACK", e.toString());
+                return "Failure";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            apply(result);
+            return;
+        }
+    }
+
+    public class DownloadViewTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            Log.w("BACK", "background-task " + id);
+            try {
+                String link = "http://apktest.site90.com/"
+                        + "?intent=" + "views"
+                        + "&token=" + user.token
+                        + "&query=" + id;
+
+                Log.w("BACK", link);
+
+
+                URL url = new URL(link);
+                URLConnection conn = url.openConnection();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                    break;
+                }
+                Log.w("BACK", sb.toString());
+
+                return sb.toString();
+            } catch (Exception e) {
+                Log.w("BACK", e.toString());
+                return "Failure";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            applyViews(result);
+            return;
+        }
+    }
+
+
 
     public String getID() {
         return this.id;
