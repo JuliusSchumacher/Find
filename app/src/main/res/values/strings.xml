@@ -6,8 +6,11 @@
     <string name="password">Password</string>
     <string name="create">Create</string>
     <string name="wrong">Failure</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">Find</string>
     <string name="no_contacts">No contacts found!</string>
-
-    <string name="hello_world">Hello world!</string>
+    <string name="unknown_location">Unknown</string>
+    <string name="title_activity_contact_position">Map</string>
+    <string name="action_search">Search</string>
+    <string name="action_logout">Logout</string>
+    <string name="search_info">Search by number or e-mail</string>
 </resources>

@@ -1,6 +1,7 @@
 package tk.elof.find;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,12 +44,24 @@ class ContactAdapter extends ArrayAdapter<Contact> {
 
         if(c != null) {
             TextView name = (TextView) view.findViewById(R.id.Name);
-            TextView position = (TextView) view.findViewById(R.id.Position);
             Switch viewSwitch = (Switch) view.findViewById(R.id.CanView);
 
             name.setText(c.getName());
-            position.setText(c.getPosition());
             viewSwitch.setChecked(c.getViews());
+
+            name.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getContext(), ContactPositionActivity.class);
+                    intent.putExtra("name", c.getName());
+                    intent.putExtra("position", c.getPosition());
+                    intent.putExtra("time", c.getTime());
+                    if (c.getPosition() != null) {
+                        getContext().startActivity(intent);
+                    }
+                }
+            });
 
             viewSwitch.setOnClickListener(new View.OnClickListener() {
 

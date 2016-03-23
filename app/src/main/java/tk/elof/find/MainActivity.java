@@ -1,6 +1,7 @@
 package tk.elof.find;
 
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +19,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -27,6 +32,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -35,10 +41,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity{
     ListView listView;
     TextView textView;
-    MapFragment mapFragment;
+    EditText searchEdit;
+    Button searchButton;
+    LinearLayout searchBar;
+    LinearLayout searchResult;
+    TextView searchResultText;
     final User user = new User();
 
     @Override
@@ -49,8 +59,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         listView = (ListView) findViewById(R.id.list);
         textView = (TextView) findViewById(R.id.noContacts);
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        searchEdit = (EditText) findViewById(R.id.search_edit_frame);
+        searchButton = (Button) findViewById(R.id.search_button);
+        searchBar = (LinearLayout) findViewById(R.id.search_bar);
+        searchResult = (LinearLayout) findViewById(R.id.search_result);
+        searchResultText = (TextView) findViewById(R.id.search_result_name);
+
+
         Intent intent = getIntent();
         user.token = intent.getStringExtra("token");
 
@@ -73,18 +88,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                return true;
+            case R.id.action_logout:
+                try {
+                    FileOutputStream fOut = openFileOutput("token", MODE_PRIVATE);
+
+                    fOut.write("".getBytes());
+                    fOut.close();
+                } catch (Exception e) {
+                    Log.w("APP", e.toString());
+                }
+
+                Intent intent = new Intent(this, Login.class);
+                startActivity(intent);
+
+                return true;
+            case R.id.action_search:
+                searchBar.setVisibility(View.VISIBLE);
+                return true;
+
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-
-
-    }
 
     public class DownloadListTask extends AsyncTask<String, Void, String> {
         @Override
@@ -145,7 +174,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             try {
-                Thread.sleep(800 * contactIDs.length);
+                Thread.sleep(1000 * contactIDs.length);
             } catch (Exception e) {
                 Log.w("APP", e.toString());
             }
@@ -154,5 +183,164 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             listView.setAdapter(adapter);
         }
+    }
+
+    public void search(View view) {
+
+        final String query = searchEdit.getText().toString();
+
+        class SearchTask extends AsyncTask<String, Void, String> {
+            @Override
+            protected String doInBackground(String... urls) {
+                Log.w("APP", "background-task");
+                try {
+                    String link = "http://apktest.site90.com/"
+                            + "?intent=" + "search"
+                            + "&query=" + query;
+
+                    Log.w("APP", link);
+
+
+                    URL url = new URL(link);
+                    URLConnection conn = url.openConnection();
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+                    Log.w("DOWN", sb.toString());
+
+                    return sb.toString();
+                } catch (Exception e) {
+                    Log.w("APP", e.toString());
+                    return "Failure";
+                }
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                user.result = result;
+                user.id = result;
+                searchResult();
+                return;
+            }
+        }
+
+        SearchTask task = new SearchTask();
+        task.execute();
+
+    }
+
+    void searchResult() {
+        class ViewTask extends AsyncTask<String, Void, String> {
+            @Override
+            protected String doInBackground(String... urls) {
+                Log.w("APP", "background-task");
+                try {
+                    String link = "http://apktest.site90.com/"
+                            + "?intent=" + "view"
+                            + "&token=" + user.token
+                            + "&query=" + user.result;
+
+                    Log.w("APP", link);
+
+
+                    URL url = new URL(link);
+                    URLConnection conn = url.openConnection();
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+                    Log.w("DOWN", sb.toString());
+
+                    return sb.toString();
+                } catch (Exception e) {
+                    Log.w("APP", e.toString());
+                    return "Failure";
+                }
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                user.result = result;
+                viewResult();
+                return;
+            }
+        }
+
+        ViewTask task = new ViewTask();
+        task.execute();
+    }
+
+    void viewResult() {
+        String[] result = user.result.split("_");
+
+        Log.w("APP", result[0]);
+        searchBar.setVisibility(View.GONE);
+        searchResult.setVisibility(View.VISIBLE);
+        searchResultText.setText(result[0]);
+    }
+
+    public void add(View view) {
+        class AddTask extends AsyncTask<String, Void, String> {
+            @Override
+            protected String doInBackground(String... urls) {
+                Log.w("APP", "background-task");
+                try {
+                    String link = "http://apktest.site90.com/"
+                            + "?intent=" + "contact"
+                            + "&token=" + user.token
+                            + "&edit=" + "contact"
+                            + "&add=" + "true"
+                            + "&id=" + user.id;
+
+                    Log.w("APP", link);
+
+
+                    URL url = new URL(link);
+                    URLConnection conn = url.openConnection();
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+                    Log.w("DOWN", sb.toString());
+
+                    return sb.toString();
+                } catch (Exception e) {
+                    Log.w("APP", e.toString());
+                    return "Failure";
+                }
+
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                return;
+            }
+        }
+
+        AddTask task = new AddTask();
+        task.execute();
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("token", user.token);
+        startActivity(intent);
     }
 }
